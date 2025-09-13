@@ -1,4 +1,3 @@
-
 -- Clase para guardar estado del gancho de cada jugador
 -- @class PlayerGrappleInfo
 -- @field IsPlayerGrappling boolean
@@ -204,10 +203,8 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
                         state.GrappleWire = beam
                     end
                 end
-
-                NextTick(function()
-                    PullPlayer(player, endPos, baseEnt.CBodyComponent.SceneNode.AbsOrigin, state.staticVelocity)
-                end)
+                
+                PullPlayer(player, endPos, baseEnt.CBodyComponent.SceneNode.AbsOrigin, state.staticVelocity)
             else
                 if ConsoleMessage then
                     print(prefix .. "Cannot obtain CBodyComponent for player " .. player:CBasePlayerController().PlayerName)
@@ -225,6 +222,22 @@ AddEventHandler("OnPluginStart", function(event)
     -- Initialize connected players
     for i = 1, playermanager:GetPlayerCount() do
         InitPlayer(GetPlayer(i-1))
+    end
+end)
+
+AddEventHandler("OnPluginStop", function(event)
+    -- Delete player states and despawn beams of PlayerInfoGrappleInfo
+    for i, player in pairs(connectedPlayers) do
+        local state = playerStates[player:GetSlot()]
+        if state and state.GrappleWire then
+            local cbe = CBaseEntity(state.GrappleWire:ToPtr())
+            if cbe and cbe:IsValid() then
+                cbe:Despawn()
+            end
+            state.GrappleWire = nil
+        end
+        playerStates[player:GetSlot()] = nil
+        connectedPlayers[player:GetSlot()] = nil
     end
 end)
 
