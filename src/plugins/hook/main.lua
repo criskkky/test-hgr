@@ -25,7 +25,6 @@ local connectedPlayers = {}
 local use_key = {}
 local GrappleBeamEnabled = false
 local RoundEnd = false
-local ConsoleMessage = true
 local prefix = "[HOOK] "
 
 -- Initialize player state
@@ -33,7 +32,7 @@ local function InitPlayer(player)
     if not player or not player:IsValid() or player:IsFakeClient() then return end
     connectedPlayers[player:GetSlot()] = player
     playerStates[player:GetSlot()] = PlayerGrappleInfo:new()
-    print("Player added: " .. player:CBasePlayerController().PlayerName)
+    -- print("Player added: " .. player:CBasePlayerController().PlayerName)
 end
 
 -- Start Hook
@@ -99,6 +98,7 @@ local function PullPlayer(player, targetPos, playerPos, dirVector)
         absVel.x = state.staticVelocity.x
         absVel.y = state.staticVelocity.y
         absVel.z = state.staticVelocity.z
+        player:CBaseEntity().AbsVelocity = absVel
     end
 
     if state.GrappleWire then
@@ -134,49 +134,26 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
 
         -- Initialize Grappling
         if not key_old and state.IsPlayerGrappling then
-            if ConsoleMessage then
-                print(player:CBasePlayerController().PlayerName .. " used hook! UserID: " .. player:GetSlot())
-                ConsoleMessage = false
-            end
-
             local grappleSpeed = 800
             local eyeAngles = nil
-            print(prefix .. "[DEBUG] Trying to get EyeAngles for " .. player:CBasePlayerController().PlayerName)
             if basePawn then
-                print(prefix .. "[DEBUG] basePawn exists for " .. player:CBasePlayerController().PlayerName)
                 if basePawn.EyeAngles then
-                    print(prefix .. "[DEBUG] Using basePawn.EyeAngles for " .. player:CBasePlayerController().PlayerName)
                     eyeAngles = basePawn.EyeAngles
-                else
-                    print(prefix .. "[DEBUG] basePawn.EyeAngles is nil for " .. player:CBasePlayerController().PlayerName)
                 end
-            else
-                print(prefix .. "[DEBUG] basePawn is nil for " .. player:CBasePlayerController().PlayerName)
             end
 
             if not eyeAngles and pawn then
-                print(prefix .. "[DEBUG] Trying to use pawn.EyeAngles as fallback for " .. player:CBasePlayerController().PlayerName)
                 if pawn.EyeAngles then
-                    print(prefix .. "[DEBUG] Using pawn.EyeAngles as fallback for " .. player:CBasePlayerController().PlayerName)
                     eyeAngles = pawn.EyeAngles
-                else
-                    print(prefix .. "[DEBUG] pawn.EyeAngles is also nil for " .. player:CBasePlayerController().PlayerName)
                 end
-            elseif not pawn then
-                print(prefix .. "[DEBUG] pawn is nil for " .. player:CBasePlayerController().PlayerName)
             end
 
             if eyeAngles then
-                print(prefix .. "[DEBUG] eyeAngles.x = " .. tostring(eyeAngles.x) .. ", eyeAngles.y = " .. tostring(eyeAngles.y))
                 local pitch = math.rad(eyeAngles.x)
                 local yaw = math.rad(eyeAngles.y)
-                print(prefix .. "[DEBUG] pitch = " .. tostring(pitch) .. ", yaw = " .. tostring(yaw))
                 local dir = Vector(math.cos(yaw)*math.cos(pitch), math.sin(yaw)*math.cos(pitch), -math.sin(pitch))
-                print(prefix .. "[DEBUG] dir = (" .. tostring(dir.x) .. ", " .. tostring(dir.y) .. ", " .. tostring(dir.z) .. ")")
                 state.staticVelocity = Vector(dir.x*grappleSpeed, dir.y*grappleSpeed, dir.z*grappleSpeed)
-                print(prefix .. "[DEBUG] staticVelocity = (" .. tostring(state.staticVelocity.x) .. ", " .. tostring(state.staticVelocity.y) .. ", " .. tostring(state.staticVelocity.z) .. ")")
             else
-                print(prefix .. "[DEBUG] Could not get EyeAngles from basePawn or pawn for " .. player:CBasePlayerController().PlayerName)
                 state.staticVelocity = Vector(0,0,0)
             end
         end
@@ -193,7 +170,7 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
                     if beam and beam:IsValid() then
                         local cbe = CBaseEntity(beam:ToPtr())
                         cbe:Spawn()
-                        cbe:Teleport(eyePos, QAngle(0,0,0), Vector(0,0,0)) -- Args warns?? max 3 args. (SwiftlyS2 Extension)
+                        cbe:Teleport(eyePos, QAngle(0,0,0), Vector(0,0,0))
 
                         -- Initialize colorObj
                         local colorObj = Color(0, 0, 255, 255) -- blue
@@ -203,13 +180,7 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
                         state.GrappleWire = beam
                     end
                 end
-                
                 PullPlayer(player, endPos, baseEnt.CBodyComponent.SceneNode.AbsOrigin, state.staticVelocity)
-            else
-                if ConsoleMessage then
-                    print(prefix .. "Cannot obtain CBodyComponent for player " .. player:CBasePlayerController().PlayerName)
-                    ConsoleMessage = false
-                end
             end
         end
 
