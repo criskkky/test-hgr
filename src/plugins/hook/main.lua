@@ -141,14 +141,27 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
             end
 
             local grappleSpeed = 800
+            local eyeAngles = nil
             if basePawn and basePawn.EyeAngles then
-                local eyeAngles = basePawn:EyeAngles()
+                eyeAngles = basePawn.EyeAngles
+            elseif pawn and pawn.EyeAngles then
+                eyeAngles = pawn.EyeAngles
+                print(prefix .. "Using pawn.EyeAngles as fallback for player " .. player:CBasePlayerController().PlayerName)
+                -- Debug adicional
+                print(prefix .. "Debug: eyeAngles.x = " .. tostring(eyeAngles.x) .. ", eyeAngles.y = " .. tostring(eyeAngles.y))
+            end
+
+            if eyeAngles then
                 local pitch = math.rad(eyeAngles.x)
                 local yaw = math.rad(eyeAngles.y)
                 local dir = Vector(math.cos(yaw)*math.cos(pitch), math.sin(yaw)*math.cos(pitch), -math.sin(pitch))
                 state.staticVelocity = Vector(dir.x*grappleSpeed, dir.y*grappleSpeed, dir.z*grappleSpeed)
+                -- Debug adicional
+                print(prefix .. "Debug: pitch = " .. tostring(pitch) .. ", yaw = " .. tostring(yaw))
+                print(prefix .. "Debug: dir = (" .. tostring(dir.x) .. ", " .. tostring(dir.y) .. ", " .. tostring(dir.z) .. ")")
+                print(prefix .. "Debug: staticVelocity = (" .. tostring(state.staticVelocity.x) .. ", " .. tostring(state.staticVelocity.y) .. ", " .. tostring(state.staticVelocity.z) .. ")")
             else
-                print(prefix .. "Cannot obtain EyeAngles for player " .. player:CBasePlayerController().PlayerName)
+                print(prefix .. "Cannot obtain EyeAngles from basePawn or pawn for player " .. player:CBasePlayerController().PlayerName)
                 state.staticVelocity = Vector(0,0,0)
             end
         end
