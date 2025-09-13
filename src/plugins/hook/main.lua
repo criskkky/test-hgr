@@ -1,12 +1,12 @@
 
 -- Clase para guardar estado del gancho de cada jugador
----@class PlayerGrappleInfo
----@field IsPlayerGrappling boolean
----@field GrappleBeamSpawned boolean
----@field GrappleBeamActive boolean
----@field GrappleWire CBeam|nil
----@field NewVelocity Vector
----@field StaticVelocity Vector
+-- @class PlayerGrappleInfo
+-- @field IsPlayerGrappling boolean
+-- @field GrappleBeamSpawned boolean
+-- @field GrappleBeamActive boolean
+-- @field GrappleWire CBeam|nil
+-- @field NewVelocity Vector
+-- @field StaticVelocity Vector
 local PlayerGrappleInfo = {}
 PlayerGrappleInfo.__index = PlayerGrappleInfo
 
@@ -124,7 +124,7 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
         local key_old = state.IsPlayerGrappling
         state.IsPlayerGrappling = use_key[playerId] or false
 
-        -- Despawning wire if not grappling
+        -- Despawn wire if not grappling
         if not state.IsPlayerGrappling and state.GrappleWire then
             local cbe = CBaseEntity(state.GrappleWire:ToPtr())
             if cbe and cbe:IsValid() then
@@ -133,7 +133,7 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
             state.GrappleWire = nil
         end
 
-        -- Initializate Grappling
+        -- Initialize Grappling
         if not key_old and state.IsPlayerGrappling then
             if ConsoleMessage then
                 print(player:CBasePlayerController().PlayerName .. " used hook! UserID: " .. player:GetSlot())
@@ -142,26 +142,42 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
 
             local grappleSpeed = 800
             local eyeAngles = nil
-            if basePawn and basePawn.EyeAngles then
-                eyeAngles = basePawn.EyeAngles
-            elseif pawn and pawn.EyeAngles then
-                eyeAngles = pawn.EyeAngles
-                print(prefix .. "Using pawn.EyeAngles as fallback for player " .. player:CBasePlayerController().PlayerName)
-                -- Debug adicional
-                print(prefix .. "Debug: eyeAngles.x = " .. tostring(eyeAngles.x) .. ", eyeAngles.y = " .. tostring(eyeAngles.y))
+            print(prefix .. "[DEBUG] Trying to get EyeAngles for " .. player:CBasePlayerController().PlayerName)
+            if basePawn then
+                print(prefix .. "[DEBUG] basePawn exists for " .. player:CBasePlayerController().PlayerName)
+                if basePawn.EyeAngles then
+                    print(prefix .. "[DEBUG] Using basePawn.EyeAngles for " .. player:CBasePlayerController().PlayerName)
+                    eyeAngles = basePawn.EyeAngles
+                else
+                    print(prefix .. "[DEBUG] basePawn.EyeAngles is nil for " .. player:CBasePlayerController().PlayerName)
+                end
+            else
+                print(prefix .. "[DEBUG] basePawn is nil for " .. player:CBasePlayerController().PlayerName)
+            end
+
+            if not eyeAngles and pawn then
+                print(prefix .. "[DEBUG] Trying to use pawn.EyeAngles as fallback for " .. player:CBasePlayerController().PlayerName)
+                if pawn.EyeAngles then
+                    print(prefix .. "[DEBUG] Using pawn.EyeAngles as fallback for " .. player:CBasePlayerController().PlayerName)
+                    eyeAngles = pawn.EyeAngles
+                else
+                    print(prefix .. "[DEBUG] pawn.EyeAngles is also nil for " .. player:CBasePlayerController().PlayerName)
+                end
+            elseif not pawn then
+                print(prefix .. "[DEBUG] pawn is nil for " .. player:CBasePlayerController().PlayerName)
             end
 
             if eyeAngles then
+                print(prefix .. "[DEBUG] eyeAngles.x = " .. tostring(eyeAngles.x) .. ", eyeAngles.y = " .. tostring(eyeAngles.y))
                 local pitch = math.rad(eyeAngles.x)
                 local yaw = math.rad(eyeAngles.y)
+                print(prefix .. "[DEBUG] pitch = " .. tostring(pitch) .. ", yaw = " .. tostring(yaw))
                 local dir = Vector(math.cos(yaw)*math.cos(pitch), math.sin(yaw)*math.cos(pitch), -math.sin(pitch))
+                print(prefix .. "[DEBUG] dir = (" .. tostring(dir.x) .. ", " .. tostring(dir.y) .. ", " .. tostring(dir.z) .. ")")
                 state.staticVelocity = Vector(dir.x*grappleSpeed, dir.y*grappleSpeed, dir.z*grappleSpeed)
-                -- Debug adicional
-                print(prefix .. "Debug: pitch = " .. tostring(pitch) .. ", yaw = " .. tostring(yaw))
-                print(prefix .. "Debug: dir = (" .. tostring(dir.x) .. ", " .. tostring(dir.y) .. ", " .. tostring(dir.z) .. ")")
-                print(prefix .. "Debug: staticVelocity = (" .. tostring(state.staticVelocity.x) .. ", " .. tostring(state.staticVelocity.y) .. ", " .. tostring(state.staticVelocity.z) .. ")")
+                print(prefix .. "[DEBUG] staticVelocity = (" .. tostring(state.staticVelocity.x) .. ", " .. tostring(state.staticVelocity.y) .. ", " .. tostring(state.staticVelocity.z) .. ")")
             else
-                print(prefix .. "Cannot obtain EyeAngles from basePawn or pawn for player " .. player:CBasePlayerController().PlayerName)
+                print(prefix .. "[DEBUG] Could not get EyeAngles from basePawn or pawn for " .. player:CBasePlayerController().PlayerName)
                 state.staticVelocity = Vector(0,0,0)
             end
         end
@@ -181,7 +197,7 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
                         cbe:Teleport(eyePos, QAngle(0,0,0), Vector(0,0,0)) -- Args warns?? max 3 args. (SwiftlyS2 Extension)
 
                         -- Initialize colorObj
-                        local colorObj = Color(0, 0, 255, 255) -- azul
+                        local colorObj = Color(0, 0, 255, 255) -- blue
                         beam.Parent.Render = colorObj
 
                         beam.Width = 4
@@ -203,10 +219,12 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
     return EventResult.Continue
 end)
 
--- Initialize connected players
-for i = 1, playermanager:GetPlayerCount() do
-    InitPlayer(GetPlayer(i-1))
-end
+AddEventHandler("OnPluginStart", function(event)
+    -- Initialize connected players
+    for i = 1, playermanager:GetPlayerCount() do
+        InitPlayer(GetPlayer(i-1))
+    end
+end)
 
 -- Connection/disconnection events
 AddEventHandler("OnPlayerConnectFull", function(event)
