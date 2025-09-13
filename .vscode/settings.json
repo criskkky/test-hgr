@@ -1,0 +1,18 @@
+{
+	"conventionalCommits.scopes": [
+		"README.md",
+		".vscode",
+		"workflow",
+		"plugin",
+		"translation",
+		"config",
+		"src"
+	],
+	"conventionalCommits.gitmoji": false,
+	"Lua.diagnostics.disable": [
+		"undefined-field",
+		"param-type-mismatch",
+		"redundant-parameter",
+		"missing-parameter"
+	],
+}
