@@ -141,7 +141,7 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
             end
 
             local grappleSpeed = 800
-            if basePawn and basePawn.EyeAngles and type(basePawn.EyeAngles) == "function" then
+            if basePawn and basePawn.EyeAngles then
                 local eyeAngles = basePawn:EyeAngles()
                 local pitch = math.rad(eyeAngles.x)
                 local yaw = math.rad(eyeAngles.y)
