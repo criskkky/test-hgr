@@ -95,7 +95,7 @@ local function PullPlayer(player, targetPos, playerPos, dirVector)
     local state = playerStates[player:GetSlot()]
     if not state then return end
 
-    local absVel = CBaseEntity(pawn:ToPtr()).AbsVelocity
+    local absVel = player:CBaseEntity().AbsVelocity
     if absVel then
         absVel.x = state.staticVelocity.x
         absVel.y = state.staticVelocity.y
@@ -184,9 +184,9 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
 
         -- Beam
         if state.IsPlayerGrappling then
-            local baseEnt = CBaseEntity(pawn:ToPtr())
+            local baseEnt = player:CBaseEntity()
             if baseEnt and baseEnt:IsValid() and baseEnt.CBodyComponent and baseEnt.CBodyComponent.SceneNode and baseEnt.CBodyComponent.SceneNode.AbsOrigin then
-                local eyePos = baseEnt.CBodyComponent.SceneNode.AbsOrigin() + Vector(0,0,61)
+                local eyePos = baseEnt.CBodyComponent.SceneNode.AbsOrigin + Vector(0,0,61)
                 local endPos = eyePos + Vector(state.staticVelocity.x*3, state.staticVelocity.y*3, state.staticVelocity.z*3)
 
                 if not state.GrappleWire then
@@ -205,7 +205,9 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
                     end
                 end
 
-                PullPlayer(player, endPos, baseEnt.CBodyComponent.SceneNode.AbsOrigin(), state.staticVelocity)
+                NextTick(function()
+                    PullPlayer(player, endPos, baseEnt.CBodyComponent.SceneNode.AbsOrigin, state.staticVelocity)
+                end)
             else
                 if ConsoleMessage then
                     print(prefix .. "Cannot obtain CBodyComponent for player " .. player:CBasePlayerController().PlayerName)
