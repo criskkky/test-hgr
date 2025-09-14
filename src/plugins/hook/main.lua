@@ -1,11 +1,11 @@
--- Clase para guardar estado del gancho de cada jugador
--- @class PlayerGrappleInfo
--- @field IsPlayerGrappling boolean
--- @field GrappleBeamSpawned boolean
--- @field GrappleBeamActive boolean
--- @field GrappleWire CBeam|nil
--- @field NewVelocity Vector
--- @field StaticVelocity Vector
+---@class PlayerGrappleInfo
+---@field IsPlayerGrappling boolean
+---@field GrappleBeamSpawned boolean
+---@field GrappleBeamActive boolean
+---@field GrappleWire CBeam|nil
+---@field NewVelocity Vector
+---@field StaticVelocity Vector
+
 local PlayerGrappleInfo = {}
 PlayerGrappleInfo.__index = PlayerGrappleInfo
 
@@ -232,6 +232,47 @@ AddEventHandler("OnPlayerDisconnect", function(event)
         end
         playerStates[player:GetSlot()] = nil
         connectedPlayers[player:GetSlot()] = nil
+    end
+    return EventResult.Continue
+end)
+
+-- Handle round states
+AddEventHandler("OnRoundStart", function(event)
+    RoundEnd = false
+    return EventResult.Continue
+end)
+
+AddEventHandler("OnRoundEnd", function(event)
+    RoundEnd = true
+    if GrappleBeamEnabled then
+        GrappleBeamEnabled = false
+        for _, player in pairs(connectedPlayers) do
+            local state = playerStates[player:GetSlot()]
+            if state and state.GrappleWire then
+                local cbe = CBaseEntity(state.GrappleWire:ToPtr())
+                if cbe and cbe:IsValid() then
+                    cbe:Despawn()
+                end
+                state.GrappleWire = nil
+            end
+        end
+    end
+    return EventResult.Continue
+end)
+
+-- Handle player death
+AddEventHandler("OnPlayerDeath", function(event)
+    local player = GetPlayer(event:GetInt("userid"))
+    if player and player:IsValid() then
+        local state = playerStates[player:GetSlot()]
+        if state and state.GrappleWire then
+            local cbe = CBaseEntity(state.GrappleWire:ToPtr())
+            if cbe and cbe:IsValid() then
+                cbe:Despawn()
+            end
+            state.GrappleWire = nil
+        end
+        state.IsPlayerGrappling = false
     end
     return EventResult.Continue
 end)
