@@ -28,6 +28,18 @@ local RoundEnd = false
 local prefix = "[HOOK] "
 
 -- Initialize player state
+
+local function DespawnGrappleWire(player)
+    local state = playerStates[player:GetSlot()]
+    if state and state.GrappleWire then
+        local cbe = CBaseEntity(state.GrappleWire:ToPtr())
+        if cbe and cbe:IsValid() then
+            cbe:Despawn()
+        end
+        state.GrappleWire = nil
+    end
+end
+
 local function InitPlayer(player)
     if not player or not player:IsValid() or player:IsFakeClient() then return end
     connectedPlayers[player:GetSlot()] = player
@@ -118,18 +130,14 @@ AddEventHandler("OnGameTick", function(event, simulating, firstTick, lastTick)
         local state = playerStates[playerId]
         local pawn = player:CCSPlayerPawn()
         local basePawn = player:CCSPlayerPawnBase()
-        if not state or not pawn:IsValid() then goto continue end
+    if not state or not pawn:IsValid() then goto continue end
 
         local key_old = state.IsPlayerGrappling
         state.IsPlayerGrappling = use_key[playerId] or false
 
         -- Despawn wire if not grappling
         if not state.IsPlayerGrappling and state.GrappleWire then
-            local cbe = CBaseEntity(state.GrappleWire:ToPtr())
-            if cbe and cbe:IsValid() then
-                cbe:Despawn()
-            end
-            state.GrappleWire = nil
+            DespawnGrappleWire(player)
         end
 
         -- Initialize Grappling
@@ -199,14 +207,7 @@ end)
 AddEventHandler("OnPluginStop", function(event)
     -- Delete player states and despawn beams of PlayerInfoGrappleInfo
     for i, player in pairs(connectedPlayers) do
-        local state = playerStates[player:GetSlot()]
-        if state and state.GrappleWire then
-            local cbe = CBaseEntity(state.GrappleWire:ToPtr())
-            if cbe and cbe:IsValid() then
-                cbe:Despawn()
-            end
-            state.GrappleWire = nil
-        end
+        DespawnGrappleWire(player)
         playerStates[player:GetSlot()] = nil
         connectedPlayers[player:GetSlot()] = nil
     end
@@ -222,14 +223,7 @@ end)
 AddEventHandler("OnPlayerDisconnect", function(event)
     local player = GetPlayer(event:GetInt("userid"))
     if player and player:IsValid() then
-        local state = playerStates[player:GetSlot()]
-        if state and state.GrappleWire then
-            local cbe = CBaseEntity(state.GrappleWire:ToPtr())
-            if cbe and cbe:IsValid() then
-                cbe:Despawn()
-            end
-            state.GrappleWire = nil
-        end
+        DespawnGrappleWire(player)
         playerStates[player:GetSlot()] = nil
         connectedPlayers[player:GetSlot()] = nil
     end
@@ -247,14 +241,7 @@ AddEventHandler("OnRoundEnd", function(event)
     if GrappleBeamEnabled then
         GrappleBeamEnabled = false
         for _, player in pairs(connectedPlayers) do
-            local state = playerStates[player:GetSlot()]
-            if state and state.GrappleWire then
-                local cbe = CBaseEntity(state.GrappleWire:ToPtr())
-                if cbe and cbe:IsValid() then
-                    cbe:Despawn()
-                end
-                state.GrappleWire = nil
-            end
+            DespawnGrappleWire(player)
         end
     end
     return EventResult.Continue
@@ -264,15 +251,11 @@ end)
 AddEventHandler("OnPlayerDeath", function(event)
     local player = GetPlayer(event:GetInt("userid"))
     if player and player:IsValid() then
+        DespawnGrappleWire(player)
         local state = playerStates[player:GetSlot()]
-        if state and state.GrappleWire then
-            local cbe = CBaseEntity(state.GrappleWire:ToPtr())
-            if cbe and cbe:IsValid() then
-                cbe:Despawn()
-            end
-            state.GrappleWire = nil
+        if state then
+            state.IsPlayerGrappling = false
         end
-        state.IsPlayerGrappling = false
     end
     return EventResult.Continue
 end)
