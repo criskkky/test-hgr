@@ -4,7 +4,7 @@ function GetPluginAuthor()
 end
 
 function GetPluginVersion()
-    return "1.0.1"
+    return "1.0.0"
 end
 
 function GetPluginName()
@@ -12,5 +12,5 @@ function GetPluginName()
 end
 
 function GetPluginWebsite()
-    return "https://github.com/criskkky/sw-multimod"
+    return "https://github.com/criskkky/sw-hgr"
 end
