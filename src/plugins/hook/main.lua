@@ -63,11 +63,8 @@ commands:Register("hook1", function(playerId)
         activeGrapplers[player:GetSlot()] = true
         -- Inicializar StaticVelocity aquí al comenzar el grapple
         local pawn = player:CCSPlayerPawn()
-        local basePawn = player:CCSPlayerPawnBase()
         local eyeAngles = nil
-        if basePawn and basePawn.EyeAngles then
-            eyeAngles = basePawn.EyeAngles
-        elseif pawn and pawn.EyeAngles then
+        if pawn and pawn.EyeAngles then
             eyeAngles = pawn.EyeAngles
         end
         local grappleSpeed = 800
